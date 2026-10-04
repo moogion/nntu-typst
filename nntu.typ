@@ -1,16 +1,25 @@
-#let placeholder_line(width: 100%, desc: none, content: none) = {
+#let placeholder_line(
+  width: 100%,
+  desc: none,
+  spacing: 3pt,
+  size: 0.8em,
+  line_offset: 0.5em,
+  line_stroke: 0.3mm,
+  style: "italic",
+  content: none,
+) = {
   box(width: width, stack(
     dir: ttb,
-    spacing: 3pt,
+    spacing: spacing,
 
     content,
 
-    line(length: 100%, start: (0%, 0.65em)),
+    line(length: 100%, start: (0%, line_offset), stroke: line_stroke),
 
     if desc != none {
       set align(center)
 
-      text(size: 0.8em, style: "italic", desc)
+      text(size: size, style: style, desc)
     },
   ))
 }
@@ -170,7 +179,6 @@
     [~], [~], [~], [~],
     [~], [~], [~], [~],
   )
-
 
   v(2fr)
 
@@ -505,8 +513,11 @@
     block(numbering + h(gap) + it.body)
   }
 
+  let heading-numbered = state("nntu-heading-numbered", false)
+
   show heading.where(numbering: none): set align(center)
   show heading.where(level: 1): it => {
+    heading-numbered.update(it.numbering != none)
     counter(math.equation).update(0)
     for kind in (image, table, raw) {
       counter(figure.where(kind: kind)).update(0)
@@ -516,13 +527,22 @@
   }
 
   set math.equation(numbering: (n, ..) => {
-    numbering("(1.1)", counter(heading).get().first(), n)
+    let is-numbered = heading-numbered.get() and counter(heading).get().first() > 0
+    if is-numbered {
+      numbering("(1.1)", counter(heading).get().first(), n)
+    } else {
+      numbering("(1)", n)
+    }
   })
 
   set figure(numbering: (n, ..) => {
-    numbering("1.1", counter(heading).get().first(), n)
+    let is-numbered = heading-numbered.get() and counter(heading).get().first() > 0
+    if is-numbered {
+      numbering("1.1", counter(heading).get().first(), n)
+    } else {
+      numbering("1", n)
+    }
   })
-
 
   show table: set par(justify: false)
 
@@ -556,7 +576,7 @@
           caption: none,
           v(15mm),
         )
-        outline(indent: 0pt)
+        outline(indent: 1.5em)
       },
     )
   }
